@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trailer Load Visualizer</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Trailer Load Visualizer</h1>
+
+    <!-- Input Table for Loads -->
+    <table id="load_input" border="1">
+        <tr>
+            <th>Load Name</th>
+            <th>Position (in)</th>
+            <th>Weight (lbs)</th>
+            <th>Height (in)</th>
+            <th>Length (in)</th>
+            <th>Action</th>
+        </tr>
+        <tr>
+            <td><input type="text" value="70 kVA Generator" class="load_name"></td>
+            <td><input type="number" class="load_position" value="128"></td>
+            <td><input type="number" class="load_weight" value="3670"></td>
+            <td><input type="number" class="load_height" value="50"></td>
+            <td><input type="number" class="load_length" value="105.12"></td>
+            <td><button onclick="removeLoad(this)">Remove</button></td>
+        </tr>
+        <tr>
+            <td><input type="text" value="5.0 Ton HVAC" class="load_name"></td>
+            <td><input type="number" class="load_position" value="30"></td>
+            <td><input type="number" class="load_weight" value="600"></td>
+            <td><input type="number" class="load_height" value="40"></td>
+            <td><input type="number" class="load_length" value="60"></td>
+            <td><button onclick="removeLoad(this)">Remove</button></td>
+        </tr>
+    </table>
+
+    <button onclick="addLoad()">Add Load</button>
+
+    <br><br>
+    <label for="axle_position">Axle Position (in):</label>
+    <input type="number" id="axle_position" value="90"><br><br>
+
+    <label for="trailer_length">Trailer Length (in):</label>
+    <input type="number" id="trailer_length" value="205"><br><br>
+
+    <button onclick="visualizeTrailerLoads()">Visualize Loads</button>
+
+    <div id="visualization"></div>
+
+    <script>
+        // Function to generate a random color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // Function to add a new row to the input table
+        function addLoad() {
+            let table = document.getElementById("load_input");
+            let newRow = table.insertRow(-1); // Add new row at the end
+
+            // Insert editable cells for load details
+            let loadNameCell = newRow.insertCell(0);
+            loadNameCell.innerHTML = `<input type="text" class="load_name" value="New Load">`;
+
+            let loadPositionCell = newRow.insertCell(1);
+            loadPositionCell.innerHTML = `<input type="number" class="load_position" value="0">`;
+
+            let loadWeightCell = newRow.insertCell(2);
+            loadWeightCell.innerHTML = `<input type="number" class="load_weight" value="0">`;
+
+            let loadHeightCell = newRow.insertCell(3);
+            loadHeightCell.innerHTML = `<input type="number" class="load_height" value="0">`;
+
+            let loadLengthCell = newRow.insertCell(4);
+            loadLengthCell.innerHTML = `<input type="number" class="load_length" value="0">`;
+
+            let removeCell = newRow.insertCell(5);
+            removeCell.innerHTML = `<button onclick="removeLoad(this)">Remove</button>`;
+
+            // Assign a random color to the new load
+            newRow.dataset.color = getRandomColor();
+        }
+
+        // Function to remove a row from the input table
+        function removeLoad(button) {
+            let row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+
+        // Function to visualize the trailer loads
+        function visualizeTrailerLoads() {
+            let axle_position = parseFloat(document.getElementById("axle_position").value);
+            let trailer_length = parseFloat(document.getElementById("trailer_length").value);
+
+            let table = document.getElementById("load_input");
+            let numRows = table.rows.length;
+
+            let loads = [];
+            for (let i = 1; i < numRows; i++) {  // Skip the header row
+                let loadName = table.rows[i].cells[0].children[0].value;
+                let loadPosition = parseFloat(table.rows[i].cells[1].children[0].value);
+                let loadWeight = parseFloat(table.rows[i].cells[2].children[0].value);
+                let loadHeight = parseFloat(table.rows[i].cells[3].children[0].value);
+                let loadLength = parseFloat(table.rows[i].cells[4].children[0].value);
+
+                // Determine color based on load name and whether it's the most recent load
+                let loadColor;
+                if (loadName.includes("Generator") === true) {
+                    loadColor = 'green'; // Fixed color for Generator
+                } else if (loadName.includes("HVAC") === true) {
+                    loadColor = 'red'; // Fixed color for HVAC
+                } else {
+                    loadColor = table.rows[i].dataset.color; // Use the stored random color
+                }
+
+                loads.push({ pos: loadPosition, weight: loadWeight, height: loadHeight, length: loadLength, name: loadName, color: loadColor });
+            }
+
+            let shapes = [];
+            let annotations = [];
+
+            // Draw trailer rectangle
+            shapes.push({
+                type: 'rect',
+                x0: 0,
+                x1: trailer_length,
+                y0: -15,
+                y1: 2.5,
+                line: {
+                    color: 'black',
+                    width: 2
+                },
+                fillcolor: 'rgba(0, 0, 0, 1)',
+                layer: 'below'
+            });
+
+            // Add rectangle shapes for each load
+            loads.forEach(load => {
+                shapes.push({
+                    type: 'rect',
+                    x0: load.pos - load.length / 2,
+                    x1: load.pos + load.length / 2,
+                    y0: 2.5,
+                    y1: 2.5 + load.height,
+                    line: {
+                        color: load.color
+                    },
+                    fillcolor: load.color,  // Use the assigned color for the fill
+                });
+
+                // Add annotations for each load's weight
+                annotations.push({
+                    x: load.pos,
+                    y: 2.5 + load.height / 2,
+                    text: `${load.weight} lbs<br>${load.name}`,
+                    showarrow: false,
+                    font: {
+                        color: 'black'
+                    }
+                });
+            });
+
+            // Calculate center of gravity
+            let total_weight = 0, sum_weight_dist = 0;
+            loads.forEach(load => {
+                total_weight += load.weight;
+                sum_weight_dist += load.pos * load.weight;
+            });
+            let center_gravity = sum_weight_dist / total_weight;
+
+            // Add axle and center of gravity markers
+            shapes.push({
+                type: 'line',
+                x0: axle_position,
+                x1: axle_position,
+                y0: -80,
+                y1: 80,
+                line: {
+                    color: 'blue',
+                    width: 2,
+                    dash: 'dash'
+                }
+            });
+
+            shapes.push({
+                type: 'line',
+                x0: center_gravity,
+                x1: center_gravity,
+                y0: -80,
+                y1: 80,
+                line: {
+                    color: 'red',
+                    width: 2,
+                    dash: 'dash'
+                }
+            });
+
+            // Add COG and Axle annotations
+            annotations.push({
+                x: axle_position,
+                y: -60,
+                text: 'Axle Position',
+                showarrow: false,
+                font: {
+                    color: 'blue'
+                }
+            });
+
+            annotations.push({
+                x: center_gravity,
+                y: -60,
+                text: 'Center of Gravity',
+                showarrow: false,
+                font: {
+                    color: 'red'
+                }
+            });
+
+            // Define plot layout with reduced width
+            let layout = {
+                title: 'Trailer Load Visualization',
+                width: 1200,  // Reduced width
+                height: 600,  // Keeping the height the same
+                xaxis: { title: 'Distance from Back of Trailer (in)', range: [-10, trailer_length + 10] },
+                yaxis: { title: 'Load Height (in)', range: [-80, 80] },
+                shapes: shapes,
+                annotations: annotations,
+                showlegend: false,
+                gridcolor: '#bdbdbd',
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff'
+            };
+
+            // Clear the previous visualization
+            document.getElementById("visualization").innerHTML = '';
+
+            // Plot the visualization using Plotly
+            Plotly.newPlot('visualization', [], layout);
+        }
+    </script>
+</body>
+</html>
