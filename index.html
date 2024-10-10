@@ -48,6 +48,9 @@
 
     <button onclick="visualizeTrailerLoads()">Visualize Loads</button>
 
+    <!-- Section to display the distance between Generator and HVAC -->
+    <h3 id="distance_display">Distance between Generator and HVAC: N/A</h3>
+
     <div id="visualization"></div>
 
     <script>
@@ -95,7 +98,7 @@
             row.parentNode.removeChild(row);
         }
 
-        // Function to visualize the trailer loads
+        // Function to visualize the trailer loads and calculate distances
         function visualizeTrailerLoads() {
             let axle_position = parseFloat(document.getElementById("axle_position").value);
             let trailer_length = parseFloat(document.getElementById("trailer_length").value);
@@ -104,6 +107,9 @@
             let numRows = table.rows.length;
 
             let loads = [];
+            let generatorPosition = null;
+            let hvacPosition = null;
+
             for (let i = 1; i < numRows; i++) {  // Skip the header row
                 let loadName = table.rows[i].cells[0].children[0].value;
                 let loadPosition = parseFloat(table.rows[i].cells[1].children[0].value);
@@ -115,8 +121,12 @@
                 let loadColor;
                 if (loadName.includes("Generator") === true) {
                     loadColor = 'green'; // Fixed color for Generator
+                    generatorPosition = loadPosition;
+                    generatorLength = loadLength;
                 } else if (loadName.includes("HVAC") === true) {
                     loadColor = 'red'; // Fixed color for HVAC
+                    hvacPosition = loadPosition;
+                    hvacLength = loadLength;
                 } else {
                     loadColor = table.rows[i].dataset.color; // Use the stored random color
                 }
@@ -223,6 +233,14 @@
                     color: 'red'
                 }
             });
+
+            // Calculate and display the distance between Generator and HVAC
+            if (generatorPosition !== null && hvacPosition !== null) {
+                let distance = Math.abs(generatorPosition - (generatorLength/2) - (hvacPosition + (hvacLength/2)));
+                document.getElementById("distance_display").textContent = `Distance between Generator and HVAC: ${distance.toFixed(2)} in`;
+            } else {
+                document.getElementById("distance_display").textContent = `Distance between Generator and HVAC: N/A`;
+            }
 
             // Define plot layout with reduced width
             let layout = {
