@@ -23,7 +23,7 @@
             <li>You can add new loads by clicking the "Add Load" button.</li>
             <li>Enter the name, position, weight, height, and length for each load.</li>
             <li>Click "Remove" to delete a load from the table.</li>
-            <li>Enter the axle position and trailer length in inches.</li>
+            <li>Enter the axle position and trailer bed length in inches.</li>
             <li>When you are ready, click the "Visualize Loads" button to view the load placement and balance on the trailer.</li>
             <li>The distance between the generator and HVAC will be calculated and displayed automatically.</li>
         </ol>
@@ -63,8 +63,8 @@
     <label for="axle_position">Axle Position (in):</label>
     <input type="number" id="axle_position" value="90"><br><br>
 
-    <label for="trailer_length">Trailer Length (in):</label>
-    <input type="number" id="trailer_length" value="205"><br><br>
+    <label for="bed_length">Bed Length (in):</label>
+    <input type="number" id="bed_length" value="205"><br><br>
 
     <button onclick="visualizeTrailerLoads()">Visualize Loads</button>
 
@@ -121,7 +121,7 @@
         // Function to visualize the trailer loads and calculate distances
         function visualizeTrailerLoads() {
             let axle_position = parseFloat(document.getElementById("axle_position").value);
-            let trailer_length = parseFloat(document.getElementById("trailer_length").value);
+            let bed_length = parseFloat(document.getElementById("bed_length").value);
 
             let table = document.getElementById("load_input");
             let numRows = table.rows.length;
@@ -161,7 +161,7 @@
             shapes.push({
                 type: 'rect',
                 x0: 0,
-                x1: trailer_length,
+                x1: bed_length,
                 y0: -15,
                 y1: 2.5,
                 line: {
@@ -267,7 +267,7 @@
                 title: 'Trailer Load Visualization',
                 width: 1200,  // Reduced width
                 height: 600,  // Keeping the height the same
-                xaxis: { title: 'Distance from Back of Trailer (in)', range: [-10, trailer_length + 10] },
+                xaxis: { title: 'Distance from Back of Trailer (in)', range: [-10, bed_length + 10] },
                 yaxis: { title: 'Load Height (in)', range: [-80, 80] },
                 shapes: shapes,
                 annotations: annotations,
