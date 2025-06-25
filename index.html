@@ -205,7 +205,24 @@
                 sum_weight_dist += load.pos * load.weight;
             });
             let center_gravity = sum_weight_dist / total_weight;
+            
+            // Update COG display
+            document.getElementById("cog_display").textContent =
+                `Center of Gravity: ${center_gravity.toFixed(2)} in`;
 
+            // Calculate weight in front of axle
+            let weightInFront = 0;
+            loads.forEach(load => {
+                if ((load.pos + (load.length / 2)) > axle_position) {
+                    weightInFront += (load.weight * ((load.pos + (load.length / 2) - axle_position) / load.length);
+                }
+            });
+            let percentInFront = (weightInFront / total_weight) * 100;
+
+            document.getElementById("weight_distribution_display").textContent =
+                `Weight in Front of Axle: ${percentInFront.toFixed(2)}%`;
+
+            
             // Add axle and center of gravity markers
             shapes.push({
                 type: 'line',
