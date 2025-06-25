@@ -71,6 +71,9 @@
     <!-- Section to display the distance between Generator and HVAC -->
     <h3 id="distance_display">Distance between Generator and HVAC: N/A</h3>
 
+    <h3 id="cog_display">Center of Gravity: N/A</h3>
+    <h3 id="weight_distribution_display">Weight in Front of Axle: N/A</h3>
+
     <div id="visualization"></div>
 
     <script>
@@ -213,11 +216,26 @@
             // Calculate weight in front of axle
             let weightInFront = 0;
             loads.forEach(load => {
-                if ((load.pos + (load.length / 2)) > axle_position) {
-                    weightInFront += (load.weight * ((load.pos + (load.length / 2) - axle_position) / load.length);
+                let frontEdge = load.pos + (load.length / 2); // toward front of trailer
+                let rearEdge = load.pos - (load.length / 2);  // toward back of trailer
+
+                if (rearEdge >= axle_position) {
+                    // Entire load is in front of axle
+                    weightInFront += load.weight;
+                } 
+                else if (frontEdge > axle_position && rearEdge < axle_position) {
+                    // Load straddles the axle
+                    let portionInFront = (frontEdge - axle_position) / load.length;
+                    weightInFront += load.weight * portionInFront;
+                }
+                else {
+                    // fully behind axle — do nothing
                 }
             });
-            let percentInFront = (weightInFront / total_weight) * 100;
+            
+            let percentInFront = total_weight > 0
+                ? (weightInFront / total_weight) * 100
+                : 0;
 
             document.getElementById("weight_distribution_display").textContent =
                 `Weight in Front of Axle: ${percentInFront.toFixed(2)}%`;
